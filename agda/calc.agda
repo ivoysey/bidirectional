@@ -18,6 +18,7 @@ module calc where
 
   data exp : Set where
     <>     : exp
+    X      : var → exp
     <_,_>  : exp → exp → exp
     fst    : exp → exp
     snd    : exp → exp
@@ -27,6 +28,8 @@ module calc where
 
   data _⊢_::_ : List (var × τ) → exp → τ → Set where
     TUnit  : {Γ : List (var × τ)} → Γ ⊢ <> :: unit
+    TX     : {Γ : List (var × τ)} {v : var} {t : τ} (p : (v , t) ∈ Γ ) →
+                 Γ ⊢ (X v) :: t
     TProd  : {Γ : List (var × τ)} {e1 e2 : exp} {t1 t2 : τ} →
                  (D1 : Γ ⊢ e1 :: t1) →
                  (D2 : Γ ⊢ e2 :: t2) →
@@ -49,32 +52,21 @@ module calc where
                  (D3 : (Γ ,, (π1 R , t2)) ⊢ π2 R :: t) →
                  Γ ⊢ case e L R :: t
 
+  val : exp → Set
+  val <> = ⊤
+  val (X x) = ⊥
+  val < e1 , e2 > = val e1 × val e2
+  val (fst e) = ⊥ -- is this right?
+  val (snd e) = ⊥ -- is this right?
+  val (inl e) = val e
+  val (inr e) = val e
+  val (case e x x₁) = ⊥
+
   ex1 : · ⊢ fst < <> , <> > :: unit
   ex1 = TFst (TProd TUnit TUnit)
 
-  -- ex2 : · ⊢ case (inl <>) (V , {!!}) (V , {!!}) :: unit
-  -- ex2 = {!!}
+  ex2 : · ⊢ case (inl <>) (V , fst < X V , <> >) (V , <>) :: unit
+  ex2 = TCase {t2 = unit} (TInl TUnit) (TFst (TProd (TX ∈h) TUnit)) TUnit
 
-
-    -- so this is the direct encoding. it ends up being really stupid to
-    -- write tc, you need a maybe sigma deriv. instead, let's push the
-    -- derivations into the same formation as the typing .. and i guess
-     -- kind of exp forming
-
-  -- tc : (e : exp) → Σ[ t ∈ τ ] (deriv e t)
-  -- tc <> = unit , TUnit
-  -- tc < e1 , e2 > with tc e1 | tc e2
-  -- ... | (t1 , d1) | (t2 , d2) = prod t1 t2 , TProd d1 d2
-  -- tc (fst e) = {!!} , (TFst {!!})
-  -- tc (snd e) = {!!} , (TSnd {!!})
-  -- tc (inl e) with tc e
-  -- ... | (t , d) = sum t {!!} , TInl d
-  -- tc (inr e) with tc e
-  -- ... | (t , d) = sum {!!} t ,  TInr d
-  -- tc (case e l r) with tc e
-  -- tc (case e l r) | unit , d = {!!}
-  -- tc (case e l r) | prod t t₁ , d = {!!}
-  -- tc (case e l r) | sum t1 t2 , d = {!!}
-
-  -- d : deriv < <> , <> > (prod unit unit)
-  -- d = TProd TUnit TUnit
+  step : (e : exp) (t : τ) (Γ : List (var × τ)) (D : Γ ⊢ e :: t) → exp
+  step = {!!}
