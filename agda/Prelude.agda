@@ -1,1 +1,1 @@
-/Users/iev/Desktop/agdahax/Prelude.agda
+../../../agdahax/Prelude.agda

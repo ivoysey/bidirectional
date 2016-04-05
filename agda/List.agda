@@ -1,1 +1,1 @@
-/Users/iev/Desktop/agdahax/List.agda
+../../../agdahax/List.agda
