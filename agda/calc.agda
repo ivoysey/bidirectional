@@ -67,11 +67,11 @@ module calc where
     TInr   : {Γ : List (var × τ)} {e : exp} {t1 t2 : τ} →
                  (D : Γ ⊢ e :: t2) →
                  Γ ⊢ inr e :: (t1 ⊕ t2)
-    TCase  : {Γ : List (var × τ)} {e : exp} {L R : var × exp} {t t1 t2 : τ} →
+    TCase  : {Γ : List (var × τ)} {e : exp} {x1 x2 : var} {L R : exp} {t t1 t2 : τ} →
                  (D1 : Γ ⊢ e :: (t1 ⊕ t2)) →
-                 (D2 : (Γ ,, (π1 L , t1)) ⊢ π2 L :: t) →
-                 (D3 : (Γ ,, (π1 R , t2)) ⊢ π2 R :: t) →
-                 Γ ⊢ case e L R :: t
+                 (D2 : (Γ ,, (x1 , t1)) ⊢ L :: t) →
+                 (D3 : (Γ ,, (x2 , t2)) ⊢ R :: t) →
+                 Γ ⊢ case e (x1 , L) (x2 , R) :: t
 
   -- a couple little derivations; note that agda's auto mode is strong
   -- enough to write these based on the constraints given by the rules
@@ -85,14 +85,28 @@ module calc where
                  (V 1 , <>) :: unit
   ex2 = TCase {t2 = unit} (TInl TUnit) (TFst (TProd (TX ∈h) TUnit)) TUnit
 
+  -- typechecking rules for bidirectional system on the same expressions
+  mutual
+    -- synthesis rules (i.e. produces type)
+    data _⊢_=>_ : List (var × τ) → exp → τ → Set where
+      BDVar : {Γ : List (var × τ)} {v : var} {t : τ} (p : (v , t) ∈ Γ ) →
+                 Γ ⊢ (X v) => t
+
+    -- analysis rules (i.e. checks against type)
+    data _⊢_<=_ : List (var × τ) → exp → τ → Set where
+      BDSwitch : {Γ : List (var × τ)} {e : exp} {t : τ} →
+                 Γ ⊢ e => t →
+                 Γ ⊢ e <= t
+
+
   -- the value judgement
   val : exp → Set
   val <> = ⊤
   val (!! e) = {!!}
   val (X x) = ⊥
   val < e1 , e2 > = val e1 × val e2
-  val (fst e) = ⊥ -- is this right?
-  val (snd e) = ⊥ -- is this right?
+  val (fst e) = ⊥    -- is this right?
+  val (snd e) = ⊥    -- is this right?
   val (inl e) = val e
   val (inr e) = val e
   val (case e x x₁) = ⊥
