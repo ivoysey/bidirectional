@@ -86,17 +86,37 @@ module calc where
   ex2 = TCase {t2 = unit} (TInl TUnit) (TFst (TProd (TX ∈h) TUnit)) TUnit
 
   -- typechecking rules for bidirectional system on the same expressions
+
+  -- TODO: missing explicit ascription form, e : t
   mutual
     -- synthesis rules (i.e. produces type)
     data _⊢_=>_ : List (var × τ) → exp → τ → Set where
-      BDVar : {Γ : List (var × τ)} {v : var} {t : τ} (p : (v , t) ∈ Γ ) →
+      BDVar : {Γ : List (var × τ)} {v : var} {t : τ} (p : (v , t) ∈ Γ) →
                  Γ ⊢ (X v) => t
+      BDFst : {Γ : List (var × τ)} {e : exp} {t1 t2 : τ} →
+                 Γ ⊢ e => (t1 ⊗ t2) →
+                 Γ ⊢ fst e => t1
+      BDSnd :  {Γ : List (var × τ)} {e : exp} {t1 t2 : τ} →
+                 Γ ⊢ e => (t1 ⊗ t2) →
+                 Γ ⊢ snd e => t2
+      BDCase : {Γ : List (var × τ)} {e : exp} {x1 x2 : var} {L R : exp} {t t1 t2 : τ} →
+                 (D1 : Γ ⊢ e => (t1 ⊕ t2)) →
+                 (D2 : (Γ ,, (x1 , t1)) ⊢ L => t) → -- NB: could be <=
+                 (D3 : (Γ ,, (x2 , t2)) ⊢ R => t) → -- NB: could be <=
+                 Γ ⊢ case e (x1 , L) (x2 , R) => t
+     --BDAtoS (need ascription form)
 
     -- analysis rules (i.e. checks against type)
     data _⊢_<=_ : List (var × τ) → exp → τ → Set where
-      BDSwitch : {Γ : List (var × τ)} {e : exp} {t : τ} →
+      BDStoA : {Γ : List (var × τ)} {e : exp} {t : τ} →
                  Γ ⊢ e => t →
                  Γ ⊢ e <= t
+      BDInl :  {Γ : List (var × τ)} {e : exp} {t1 t2 : τ} →
+                 Γ ⊢ e <= t1 →
+                 Γ ⊢ inl e <= (t1 ⊕ t2)
+      BDInr :  {Γ : List (var × τ)} {e : exp} {t1 t2 : τ} →
+                 Γ ⊢ e <= t2 →
+                 Γ ⊢ inr e <= (t1 ⊕ t2)
 
 
   -- the value judgement
