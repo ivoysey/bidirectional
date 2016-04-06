@@ -118,7 +118,6 @@ module calc where
                  Γ ⊢ e <= t2 →
                  Γ ⊢ inr e <= (t1 ⊕ t2)
 
-
   -- the value judgement
   val : exp → Set
   val <> = ⊤
